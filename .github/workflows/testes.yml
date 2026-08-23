@@ -13,24 +13,35 @@ jobs:
       with:
         python-version: '3.10'
 
-    # CASO DE TESTE 1: Cliente Informal com Bom Score (Deve ser Aprovado)
-    - name: Testar Cliente Informal de Alto Score
+    # CASO DE TESTE 1: Solicitante com bom score e parcela dentro do limite
+    - name: Testar Cliente Aprovado com Score Social Calculado
       run: |
-        OUTPUT=$(echo -e "80\n0" | python src/triagem.py)
+        OUTPUT=$(echo -e "0\n2000\n1000\n0\ns\n24\n500" | python src/triagem.py)
         if [[ "$OUTPUT" =~ "Resultado: Aprovado" ]]; then
           echo "✅ Teste 1 Passou!"
         else
-          echo "❌ Teste 1 Falhou: Cliente informal com bom score foi bloqueado."
+          echo "❌ Teste 1 Falhou: Cliente com score social alto e parcela viavel foi reprovado."
           exit 1
         fi
 
-    # CASO DE TESTE 2: Cliente com Baixo Score e Sem Renda (Deve ser Reprovado)
-    - name: Testar Cliente de Baixo Score
+    # CASO DE TESTE 2: Solicitante com score abaixo de 70 (Deve ser Reprovado)
+    - name: Testar Cliente Reprovado por Baixo Score
       run: |
-        OUTPUT=$(echo -e "40\n0" | python src/triagem.py)
+        OUTPUT=$(echo -e "0\n2000\n1800\n500\nn\n4\n100" | python src/triagem.py)
         if [[ "$OUTPUT" =~ "Resultado: Reprovado" ]]; then
           echo "✅ Teste 2 Passou!"
         else
-          echo "❌ Teste 2 Falhou: Cliente com baixo score não foi reprovado."
+          echo "❌ Teste 2 Falhou: Cliente com baixo score social nao foi reprovado."
+          exit 1
+        fi
+
+    # CASO DE TESTE 3: Solicitante com bom score, mas parcela acima do limite de 30%
+    - name: Testar Cliente Reprovado por Comprometimento Excessivo
+      run: |
+        OUTPUT=$(echo -e "0\n2000\n1000\n0\ns\n24\n700" | python src/triagem.py)
+        if [[ "$OUTPUT" =~ "Resultado: Reprovado" ]]; then
+          echo "✅ Teste 3 Passou!"
+        else
+          echo "❌ Teste 3 Falhou: Parcela acima de 30% da renda foi aprovada."
           exit 1
         fi
