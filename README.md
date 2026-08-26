@@ -4,7 +4,7 @@
 
 Este projeto propoe um modelo de triagem de microcredito mais inclusivo para pequenos empreendedores e trabalhadores informais, como costureiras, feirantes, mecanicos, vendedores autonomos e outros profissionais sem vinculo formal CLT.
 
-O problema central do sistema antigo era usar a ausencia de renda formal comprovada como criterio de reprovacao automatica. Esse modelo gerava exclusao financeira, mesmo quando o solicitante apresentava bom historico de pagamento, estabilidade na atividade economica e capacidade real de honrar o credito.
+O sistema anterior utilizava a ausencia de renda formal comprovada como criterio de reprovacao automatica. Isso gerava exclusao financeira mesmo quando o solicitante apresentava bom historico de pagamento, estabilidade na atividade economica e capacidade real de honrar o credito.
 
 O novo modelo substitui essa logica por uma avaliacao baseada em **Score Social Alternativo**, reduzindo vies algoritmico e ampliando o acesso ao microcredito com controle de risco.
 
@@ -16,14 +16,14 @@ O sistema deve:
 
 - reconhecer a capacidade de pagamento de trabalhadores informais;
 - priorizar comportamento financeiro e estabilidade da atividade economica;
-- manter um criterio minimo de risco para concessao;
+- manter criterio minimo de risco para concessao;
 - proteger os dados pessoais dos solicitantes de acordo com principios de compliance e LGPD.
 
 ## Problema de Negocio
 
 No cenario apresentado, 95% das mulheres chefes de familia da comunidade sao rejeitadas pelo sistema anterior por nao possuirem renda formal comprovada, mesmo mantendo contas em dia e operando atividades economicas estaveis.
 
-Esse comportamento cria tres falhas graves:
+Esse comportamento cria tres falhas principais:
 
 - exclusao de clientes com capacidade real de pagamento;
 - reforco de vies estrutural contra trabalhadores informais;
@@ -31,19 +31,35 @@ Esse comportamento cria tres falhas graves:
 
 ## Proposta de Solucao
 
-O sistema utiliza um **Score Social Alternativo** de 0 a 100 para orientar a triagem inicial do solicitante.
+O sistema passa a calcular um **Score Social Alternativo** com base em variaveis de comportamento financeiro e estabilidade profissional. A renda formal CLT continua sendo registrada, mas nao funciona como filtro automatico de reprovacao.
 
-A renda formal CLT ainda pode ser registrada no sistema, mas nao deve funcionar como filtro automatico de reprovacao. A decisao deve analisar primeiro o score social, que representa um retrato mais fiel da realidade financeira do cliente.
+A decisao final considera dois eixos:
 
-## Variaveis de Avaliacao
+- o score social calculado a partir de variaveis alternativas;
+- a regra de seguranca que limita a parcela total do credito a `30%` da renda estimada.
 
-O score social e construido a partir de indicadores alternativos relacionados ao comportamento financeiro e a estabilidade da atividade produtiva:
+## Entradas do Sistema
 
+O programa coleta as seguintes informacoes pelo terminal:
+
+- renda formal CLT;
+- renda estimada da atividade economica;
 - despesas mensais;
-- renda estimada;
-- emprestimos atuais;
+- valor da parcela de emprestimos atuais;
 - historico de pagamento e fidelidade;
-- tempo de atividade profissional.
+- tempo de atividade profissional em meses;
+- valor da parcela do novo emprestimo solicitado.
+
+## Avaliacao Social
+
+Para facilitar o credito, o solicitante deve apresentar um comportamento financeiro e social que indique responsabilidade com compromissos assumidos. O sistema considera:
+
+- pagamentos;
+- renda estimada;
+- despesas;
+- emprestimos atuais;
+- historico de fidelidade;
+- tempo de atividade.
 
 ## Regras de Pontuacao
 
@@ -55,7 +71,7 @@ Exemplo:
 
 `Renda estimada = R$ 2.000,00`
 
-Essa informacao serve como base para comparar despesas e comprometimento com emprestimos.
+Essa informacao serve como base para comparar despesas e comprometimento com emprestimos. Ela nao gera pontos de forma isolada.
 
 ### 2. Despesas Mensais (D)
 
@@ -77,9 +93,9 @@ O sistema analisa o peso das parcelas ja existentes em relacao a renda estimada.
 | Parcelas de emprestimos de ate 30% da renda | 50 |
 | Parcelas superiores a 30% da renda | 0 |
 
-Regra de seguranca:
+Observacao:
 
-Um novo emprestimo nao deve fazer o comprometimento total superar `30%` da renda estimada do solicitante.
+Quando nao existe emprestimo atual, o criterio recebe `100 pontos`. O projeto nao remove essa variavel do calculo, porque ausencia de endividamento representa menor risco.
 
 ### 4. Historico de Pagamento e Fidelidade (EF)
 
@@ -97,8 +113,8 @@ Esse fator mede estabilidade da fonte de renda.
 | Tempo de atividade | Pontuacao |
 | --- | ---: |
 | Ate 6 meses | 0 |
-| Acima de 6 meses ate 1 ano | 50 |
-| Acima de 1 ano | 100 |
+| Mais de 6 meses ate 1 ano | 50 |
+| Mais de 1 ano | 100 |
 
 ## Pontuacao Maxima
 
@@ -120,27 +136,32 @@ Exemplo:
 - pontuacao obtida: `300`;
 - score social: `(300 / 400) x 100 = 75`.
 
-## Regra de Triagem
+## Regra de Credito
 
-A triagem deve analisar primeiro o **Score Social Alternativo**.
+O sistema aprova o solicitante somente quando as duas condicoes abaixo sao atendidas:
 
-Regra inicial proposta:
+1. `Score Social >= 70`
+2. A parcela do novo emprestimo nao ultrapassa `30%` da renda estimada e a soma das parcelas atuais com a nova parcela tambem nao ultrapassa `30%` da renda estimada
 
-- `Score Social >= 60`: `Resultado: Aprovado`
-- `Score Social < 60`: `Resultado: Reprovado`
+Quando qualquer uma dessas condicoes falha, o resultado e de reprovacao.
 
-### Exemplo
+### Regra de Seguranca da Parcela
 
-Solicitante informal:
+Seja:
 
-- renda formal CLT: `R$ 0,00`;
-- score social: `82`.
+- `limite_parcela = renda_estimada x 0,30`
 
-Resultado esperado:
+Entao:
 
-`Resultado: Aprovado`
+- se `parcela_novo_emprestimo > limite_parcela`, o credito nao pode ser aprovado;
+- se `parcela_emprestimo_atual + parcela_novo_emprestimo > limite_parcela`, o credito nao pode ser aprovado.
 
-Essa regra garante que a ausencia de vinculo formal nao provoque exclusao automatica.
+## Regra de Saida
+
+Para manter aderencia ao criterio de aceite do projeto, o sistema exibe:
+
+- `Resultado: Aprovado`
+- `Resultado: Reprovado`
 
 ## Fluxo do Processo de Negocio
 
@@ -155,7 +176,7 @@ O processo de triagem segue as etapas abaixo:
 7. identificacao do tempo de atividade profissional;
 8. calculo da pontuacao dos criterios;
 9. conversao da pontuacao para score social de 0 a 100;
-10. analise do score social;
+10. verificacao da regra de comprometimento maximo de `30%` da renda;
 11. exibicao do resultado final:
 
 - `Resultado: Aprovado`
@@ -182,7 +203,7 @@ O sistema foi projetado para evitar que a existencia ou ausencia de vinculo form
 Medidas adotadas:
 
 - a renda formal nao e criterio inicial de reprovacao;
-- a decisao depende primeiro do score social;
+- a decisao depende primeiro do score social calculado;
 - o modelo considera indicadores concretos de comportamento financeiro;
 - caracteristicas pessoais sem relacao com risco de credito nao devem influenciar a analise;
 - a logica busca reduzir exclusao de grupos historicamente afetados pelo mercado informal.
@@ -244,12 +265,3 @@ O projeto busca entregar um sistema de triagem mais justo, transparente e inclus
 O equilibrio esperado do modelo e:
 
 `Inclusao financeira + controle de risco + protecao de dados pessoais`
-
-## Estrutura da Entrega
-
-Nesta fase, o repositorio deve conter:
-
-- `README.md` com documentacao do processo de negocio, score, vies, compliance e viabilidade;
-- `src/triagem.py` como arquivo principal da logica de triagem.
-
-As proximas fases envolvem a implementacao da regra de triagem no codigo e a validacao dos cenarios esperados.
