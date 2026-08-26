@@ -1,3 +1,56 @@
+def ler_float(mensagem, minimo=0):
+    while True:
+        try:
+            valor = input(mensagem).strip()
+
+            if valor == "":
+                print("Erro: este campo não pode ficar vazio.")
+                continue
+
+            
+            valor = valor.replace(",", ".")
+            numero = float(valor)
+
+            if numero < minimo:
+                print(f"Erro: informe um valor maior ou igual a {minimo}.")
+                continue
+
+            return numero
+
+        except ValueError:
+            print("Erro: informe apenas um número válido.")
+        except (KeyboardInterrupt, EOFError):
+            print("\nOperação cancelada pelo usuário.")
+            return None
+
+
+def ler_int(mensagem, minimo=0):
+    while True:
+        try:
+            valor = input(mensagem).strip()
+
+            if valor == "":
+                print("Erro: este campo não pode ficar vazio.")
+                continue
+
+            numero = int(valor)
+
+            if numero < minimo:
+                print(
+                    f"Erro: informe um número inteiro "
+                    f"maior ou igual a {minimo}."
+                )
+                continue
+
+            return numero
+
+        except ValueError:
+            print("Erro: informe um número inteiro válido.")
+        except (KeyboardInterrupt, EOFError):
+            print("\nOperação cancelada pelo usuário.")
+            return None
+
+
 def pontuar_despesas(despesas, renda_estimada):
     percentual = despesas / renda_estimada
 
@@ -61,45 +114,80 @@ def converter_historico_pagamento(resposta):
 
     raise ValueError("Resposta invalida para historico de pagamento.")
 
+def ler_historico():
+    while True:
+        try:
+            resposta = input(
+                "Historico de pagamento em dia? (s/n): "
+            )
+
+            try:
+                return converter_historico_pagamento(resposta)
+
+            except ValueError as erro:
+                print(erro)
+
+        except (KeyboardInterrupt, EOFError):
+            print("\nOperação cancelada pelo usuário.")
+            return None
 
 def calcular_triagem():
     print("--- SISTEMA DE MICROCRÉDITO INCLUSIVO UniFAP ---")
 
-    renda_formal = float(input("Digite a Renda Formal CLT (R$): "))
-    renda_estimada = float(input("Digite a Renda Estimada (R$): "))
-    despesas = float(input("Digite o valor das Despesas Mensais (R$): "))
-    parcela_emprestimo_atual = float(
-        input("Digite a Parcela de Emprestimos Atuais (R$): ")
-    )
-    historico_pagamento = input("Historico de pagamento em dia? (s/n): ")
-    tempo_atividade_meses = int(input("Digite o Tempo de Atividade (em meses): "))
-    parcela_novo_emprestimo = float(
-        input("Digite a Parcela do Novo Emprestimo (R$): ")
+    renda_formal = ler_float(
+        "Digite a Renda Formal CLT (R$): "
     )
 
-    _ = renda_formal
-
-    if renda_estimada <= 0:
-        print("Renda estimada invalida. Informe um valor maior que zero.")
+    if renda_formal is None:
         return
 
-    if (
-        renda_formal < 0
-        or despesas < 0
-        or parcela_emprestimo_atual < 0
-        or tempo_atividade_meses < 0
-        or parcela_novo_emprestimo < 0
-    ):
-        print("Valores invalidos. Informe apenas numeros maiores ou iguais a zero.")
+
+    renda_estimada = ler_float(
+        "Digite a Renda Estimada (R$): ",
+        minimo=0.01
+    )
+
+    if renda_estimada is None:
         return
 
-    try:
-        historico_pagamento_em_dia = converter_historico_pagamento(
-            historico_pagamento
-        )
-    except ValueError as erro:
-        print(erro)
+
+    despesas = ler_float(
+        "Digite o valor das Despesas Mensais (R$): "
+    )
+
+    if despesas is None:
         return
+
+
+    parcela_emprestimo_atual = ler_float(
+        "Digite a Parcela de Emprestimos Atuais (R$): "
+    )
+
+    if parcela_emprestimo_atual is None:
+        return
+
+
+    historico_pagamento_em_dia = ler_historico()
+
+    if historico_pagamento_em_dia is None:
+        return
+
+
+    tempo_atividade_meses = ler_int(
+        "Digite o Tempo de Atividade (em meses): "
+    )
+
+    if tempo_atividade_meses is None:
+        return
+
+
+    parcela_novo_emprestimo = ler_float(
+        "Digite a Parcela do Novo Emprestimo (R$): "
+    )
+
+    if parcela_novo_emprestimo is None:
+        return
+    
 
     score_social = calcular_score_social(
         renda_estimada,
